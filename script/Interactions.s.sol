@@ -17,22 +17,15 @@ contract CreateSubscription is Script {
         return subscriptionId;
     }
 
-    function createSubscription(
-        address vrfCoordinator,
-        address account
-    ) public returns (uint256) {
+    function createSubscription(address vrfCoordinator, address account) public returns (uint256) {
         console.log("Creating subscription on Chain Id:", block.chainid);
         vm.startBroadcast(account);
-        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(
-            vrfCoordinator
-        );
+        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(vrfCoordinator);
         uint256 subscriptionId = vrfCoordinatorV2_5Mock.createSubscription();
         vm.stopBroadcast();
 
         console.log("Subscription Id:", subscriptionId);
-        console.log(
-            "Please copy the subscription Id and paste it in the HelperConfig contract"
-        );
+        console.log("Please copy the subscription Id and paste it in the HelperConfig contract");
         return subscriptionId;
     }
 
@@ -58,31 +51,17 @@ contract FundSubscription is Script, CodeConstant {
         fundSubscription(vrfCoordinator, subscriptionId, link, account);
     }
 
-    function fundSubscription(
-        address vrfCoordinator,
-        uint256 subscriptionId,
-        address link,
-        address account
-    ) public {
+    function fundSubscription(address vrfCoordinator, uint256 subscriptionId, address link, address account) public {
         console.log("Funding subscription on Chain Id:", block.chainid);
         if (block.chainid == LOCAL_CHAIN_ID) {
             vm.startBroadcast(account);
-            VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(
-                    vrfCoordinator
-                );
-            vrfCoordinatorV2_5Mock.fundSubscription(
-                subscriptionId,
-                FUND_AMOUNT * 100
-            );
+            VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(vrfCoordinator);
+            vrfCoordinatorV2_5Mock.fundSubscription(subscriptionId, FUND_AMOUNT * 100);
             vm.stopBroadcast();
             console.log("Subscription funded");
         } else {
             vm.startBroadcast();
-            LinkToken(link).transferAndCall(
-                vrfCoordinator,
-                FUND_AMOUNT,
-                abi.encode(subscriptionId)
-            );
+            LinkToken(link).transferAndCall(vrfCoordinator, FUND_AMOUNT, abi.encode(subscriptionId));
             vm.stopBroadcast();
         }
     }
@@ -99,32 +78,17 @@ contract AddConsumer is Script {
         address vrfCoordinator = config.vrfCoordinator;
         address account = config.account;
         uint256 subscriptionId = config.subscriptionId;
-        address mostRecentConsumer = DevOpsTools.get_most_recent_deployment(
-            "Raffle",
-            block.chainid
-        );
+        address mostRecentConsumer = DevOpsTools.get_most_recent_deployment("Raffle", block.chainid);
 
-        addConsumer(
-            vrfCoordinator,
-            account,
-            subscriptionId,
-            mostRecentConsumer
-        );
+        addConsumer(vrfCoordinator, account, subscriptionId, mostRecentConsumer);
     }
 
-    function addConsumer(
-        address vrfCoordinator,
-        address account,
-        uint256 subscriptionId,
-        address consumer
-    ) public {
+    function addConsumer(address vrfCoordinator, address account, uint256 subscriptionId, address consumer) public {
         console.log("Adding consumer on Chain Id:", block.chainid);
         console.log("Adding consumer contract:", consumer);
         console.log("To vrfCoordinator:", vrfCoordinator);
         vm.startBroadcast(account);
-        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(
-            vrfCoordinator
-        );
+        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = VRFCoordinatorV2_5Mock(vrfCoordinator);
         vrfCoordinatorV2_5Mock.addConsumer(subscriptionId, consumer);
         vm.stopBroadcast();
         console.log("Consumer added");

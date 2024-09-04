@@ -9,15 +9,12 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     error Raffle__NotSendEnoughFound();
     error Raffle__EntryRaffleNotOpen();
     error Raffle__TransferFailed();
-    error Raffle__UpkeepNotNeeded(
-        uint256 balance,
-        uint256 players,
-        RaffleState state
-    );
+    error Raffle__UpkeepNotNeeded(uint256 balance, uint256 players, RaffleState state);
 
     enum RaffleState {
         OPEN, //0
         CALCULATING //1
+
     }
 
     RaffleState private s_raffleState;
@@ -63,52 +60,40 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         emit PlayerEntered(msg.sender);
     }
 
-    function checkUpkeep(
-        bytes memory /* checkData */
-    ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
+    function checkUpkeep(bytes memory /* checkData */ )
+        public
+        view
+        returns (bool upkeepNeeded, bytes memory /* performData */ )
+    {
         bool timeHasPassed = block.timestamp > s_lastTimeStamp + i_interval;
         bool raffleIsOpen = s_raffleState == RaffleState.OPEN;
         bool playersExist = s_players.length > 0;
         bool fundExists = address(this).balance > 0;
-        upkeepNeeded =
-            timeHasPassed &&
-            raffleIsOpen &&
-            playersExist &&
-            fundExists;
+        upkeepNeeded = timeHasPassed && raffleIsOpen && playersExist && fundExists;
         return (upkeepNeeded, "");
     }
 
-    function performUpkeep(bytes calldata /* performData */) external {
-        (bool upkeepNeeded, ) = checkUpkeep("");
+    function performUpkeep(bytes calldata /* performData */ ) external {
+        (bool upkeepNeeded,) = checkUpkeep("");
         if (!upkeepNeeded) {
-            revert Raffle__UpkeepNotNeeded(
-                address(this).balance,
-                s_players.length,
-                s_raffleState
-            );
+            revert Raffle__UpkeepNotNeeded(address(this).balance, s_players.length, s_raffleState);
         }
         s_raffleState = RaffleState.CALCULATING;
 
-        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
-            .RandomWordsRequest({
-                keyHash: i_keyHash,
-                subId: i_subscriptionId,
-                requestConfirmations: REQUEST_CONFIRMATIONS,
-                callbackGasLimit: i_callbackGasLimit,
-                numWords: NUM_WORDS,
-                // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
-                )
-            });
+        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient.RandomWordsRequest({
+            keyHash: i_keyHash,
+            subId: i_subscriptionId,
+            requestConfirmations: REQUEST_CONFIRMATIONS,
+            callbackGasLimit: i_callbackGasLimit,
+            numWords: NUM_WORDS,
+            // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+            extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+        });
 
         s_vrfCoordinator.requestRandomWords(request);
     }
 
-    function fulfillRandomWords(
-        uint256 /*requestId*/,
-        uint256[] calldata randomWords
-    ) internal override {
+    function fulfillRandomWords(uint256, /*requestId*/ uint256[] calldata randomWords) internal override {
         s_winner = s_players[randomWords[0] % s_players.length];
         s_players = new address payable[](0);
         s_raffleState = RaffleState.OPEN;
@@ -116,7 +101,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
 
         emit WinnerPicked(s_winner);
 
-        (bool success, ) = s_winner.call{value: address(this).balance}("");
+        (bool success,) = s_winner.call{value: address(this).balance}("");
         if (!success) {
             revert Raffle__TransferFailed();
         }

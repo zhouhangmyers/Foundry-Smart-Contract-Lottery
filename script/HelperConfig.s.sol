@@ -39,9 +39,7 @@ contract HelperConfig is Script, CodeConstant {
         netWorkConfig[ETH_SEPOLIA_CHAIN_ID] = getSepoliaEthConfig();
     }
 
-    function getNetWorkConfigByChainId(
-        uint256 chainid
-    ) public returns (NetWorkConfig memory) {
+    function getNetWorkConfigByChainId(uint256 chainid) public returns (NetWorkConfig memory) {
         if (netWorkConfig[chainid].vrfCoordinator != address(0)) {
             return netWorkConfig[ETH_SEPOLIA_CHAIN_ID];
         } else if (chainid == LOCAL_CHAIN_ID) {
@@ -52,17 +50,16 @@ contract HelperConfig is Script, CodeConstant {
     }
 
     function getSepoliaEthConfig() public pure returns (NetWorkConfig memory) {
-        return
-            NetWorkConfig({
-                entryFee: 0.01 ether,
-                interval: 30,
-                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-                subscriptionId: 77113682376656144762576379467727317787801460865064588376580268143731395726051,
-                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                callbackGasLimit: 500000,
-                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-                account: 0xEC8E6b06C31CbFC078Fa87D5dca574350f3DD4d1
-            });
+        return NetWorkConfig({
+            entryFee: 0.01 ether,
+            interval: 30,
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            subscriptionId: 77113682376656144762576379467727317787801460865064588376580268143731395726051,
+            keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+            callbackGasLimit: 500000,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0xEC8E6b06C31CbFC078Fa87D5dca574350f3DD4d1
+        });
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetWorkConfig memory) {
@@ -70,11 +67,8 @@ contract HelperConfig is Script, CodeConstant {
             return localNetWorkConfig;
         }
         vm.startBroadcast();
-        VRFCoordinatorV2_5Mock vrfCoordinator = new VRFCoordinatorV2_5Mock(
-            MOCK_BASE_FEE,
-            MOCK_GAS_PRICE,
-            MOCK_WEI_PER_UNIT_LINK
-        );
+        VRFCoordinatorV2_5Mock vrfCoordinator =
+            new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE, MOCK_WEI_PER_UNIT_LINK);
         LinkToken linkToken = new LinkToken();
         vm.stopBroadcast();
 
